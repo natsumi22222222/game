@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>手のひら射的</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cannon@0.6.2/build/cannon.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensoflow/tfjs-backend-webgl"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensoflow-models/hand-pose-detection"></script>
+  <script>
+  let scene, camera, renderer, world;
+  let width, height, scale;
+  let canvas, context, video;
+  let objects = new Array(), num = 50;
+  let status = "ready", request;
+
+  // MedeaPipeHandsモデル
+  let detector
+  const model = handPoseDetection. SuppotedModels. MedeaPipeHands;
+  const config = {
+    runtime: "mediapipe",
+    solutionPath: "https://cdn.jsdelivr.net/npm/@mediapipe/hands",
+    modelType: "lite", maxHands: 1
+  }
+
+  const init = async () => {
+    // 画面サイズ
+    width = window.innerWidth - 20;
+    scale = width / 640;
+    height = 360 * scale;
+    if (height > windiw.innerHeight - 150){
+      height =  windiw.innerHeight - 150
+      scale = height / 360;
+      width = 640 * scale;
+    }
+  }
+  </script>
+</head>
+<body>
+
+</body>
+</html>
