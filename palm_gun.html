@@ -35,7 +35,59 @@
       scale = height / 360;
       width = 640 * scale;
     }
+    // シーン、カメラ、レンダラー、ライト（平行光源、環境光）
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(50,width/height,1,100);
+    camera.position.set(0,20,50);
+    camera.lookAt(0,15,0);
+    renderer = new THREE.WebGLRenderer({antialias: true});
+    renderer.setSize(width,height);
+    document.getElementById("renderArea").appendChild(renderer.domElement);
+    const light = new THREE.DirectionalLight("#FFFFFF");
+    light.position.set(10,20,10);
+    [renderer.shadowMap.enabled,light.castShadow] = [true,true];
+    [light.shadow.camera.top,light.shadow.camera.bottom] = [30,-30];
+    [light.shadow.camera.left,light.shadow.camera.right] = [-30,30];
+    [light.shadow.mapSize.width,light.shadow.mapSize.height] = [2024,2048];
+    scene.add(light);
+    const ambientLight = new THREE.AmbientLight("#666666");
+    scene.add(ambientLight);
+    // 物理ワールドの設定
+    world = new CANNON.World();
+    world.gravity.set(0,-9,8,0);
+    world.broadphase = new CANON.NaiveBroadphase();
+    // オブジェクトの作成
+    for (let j=0; j<4; j++){
+      const [y,z] = [3+j*6, 10-j*10];
+      createObject("box",0,y,z,60,6,10, "CC0000");
+    }
+    color = ["CCCCCC", "#33CCCC", "33CC66", "CC9933"]
+    for (let i=0; i<5; i++) {
+      for (let j=0; j<4; j++) {
+        const[x,y,z] = [10*(i-2), 10+j*6, 12-j*10];
+        objects.push(createObject("box",x,y,z,2,4,2,color[j],0.1));
+      }
   }
+  renderer.render(scene,camera);
+  // 照準用キャンバス,ビデオ要素の取得、イベントの登録
+  canvas = document.createElement("canvas");
+  context = canvas.getContext("2d");
+  [canvas.width,canvas.height] = [widht, height];
+  document.getElementById("renderArea").appendChild(canvas);
+  video = document.getElementById("video");
+  video = addEventListener("loadeddata",update);
+  // デテクターの作成、空データの検出
+  detector = await handPoseDetection.createDetector(model.config);
+  const hands = await detector.estimateHands(canvas);
+  document.getElementById("message").innerText += "ok";
+  document.getElementById("start").didabled = false;
+}
+const createObject = (type,x,y,z,a,b,c,color,mass = 0) => {
+  // 表示用オブジェクトの作成
+  let geometry = new THREE.BoxGeometry(a,b,c);
+  if (type == "sphere") geometry = new THREE.SphereGeometry(a,24,24);
+  const material = new THREE.MeshPhongMaterial({color:color});
+}
   </script>
 </head>
 <body>
