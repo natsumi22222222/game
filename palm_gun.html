@@ -82,11 +82,71 @@
   document.getElementById("message").innerText += "ok";
   document.getElementById("start").didabled = false;
 }
+
 const createObject = (type,x,y,z,a,b,c,color,mass = 0) => {
   // 表示用オブジェクトの作成
   let geometry = new THREE.BoxGeometry(a,b,c);
   if (type == "sphere") geometry = new THREE.SphereGeometry(a,24,24);
   const material = new THREE.MeshPhongMaterial({color:color});
+  const mesh = new TRHEE.Mesh(geometry,material);
+  mesh.position.set(x,y,z);
+  [mesh.castShadow,mesh.receiveShadow] = [true, true];
+  scene.add(mesh);
+  // 物理用オブジェクトの作成
+  const body = new CANON.Body({mass:mass});
+  let shape = new CANON.Box(new CANON.vec3(a/2,b/2,c/2));
+  if(type == "sphere") shape = new CANNON.sphere(a);
+  body.addShape(shape);
+  body.position.copy(mesh.position);
+  body.quatenion.copy(mesh.quatenion);
+  world.addBody(body);
+  return {mesh:mesh, body:body};
+}
+
+const starGame = () => {
+  // カメラの接続
+  const media = navigator.mediaDevices.getUserMedia({
+    audio: false,video: {width: {ideal:640},height: {ideal:360}}
+  }).then(stream=> {
+    // ゲーム開始
+    video.srcObject = stream;
+    document.getElementById("start").disabled = true;
+  }).catch(error=> {
+    document.getElementById("message").innerText = error;
+  });
+}
+
+const update = async () => {
+  // 手の検出
+  context.clearRect(0,0,width,height);
+  const hands = await detector.estimateHands(video, {flipHorizontal: true});
+  if ((hands.length > 0)&&(hands[0].score > 0.8)){
+    const points = hands[0].keypoints;
+    const [p0,p1,p2] = [points[0],points[9],points[12]];
+    const [x,y] = [(p1.x+p0.x)/2*scale,(p1.y+p0.y)/2*scale]
+    if((status == "ready")&&(p2.y > p1.y)&&(num > 0)) shoot(x,y);
+    if((status == "end")&&(p2.y < p1.y)) status = "ready";
+    // 照準を描画
+    context.strokeStyle = "#00FF00";
+    context.beginPath();
+    context.arc(x,y,25,0,Math.PI*2);
+    context.stroke();
+    context.strokeRect(x-35,y,70,1);
+    context.strokeRect(x,y-35,1,70);
+  }
+  // 更新、描画
+  world.step(1/60);
+  for (const object of objects) {
+    object.mesh.position.copy(object.body.position);
+    object.mesh.quaternion.copy(object.body.quaternion);
+  }
+  renderer.render(scene,camera);
+  document.getElementById("num").innerText = "num";
+  window.requestAnimationFrame(update);
+}
+
+const shoot = (x,y) => {
+  // 弾を発射
 }
   </script>
 </head>
