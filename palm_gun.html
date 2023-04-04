@@ -8,17 +8,17 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensoflow/tfjs-backend-webgl"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensoflow-models/hand-pose-detection"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensoflow-models/hand-pose-detection">
+  </script>
   <script>
   let scene, camera, renderer, world;
   let width, height, scale;
   let canvas, context, video;
   let objects = new Array(), num = 50;
   let status = "ready", request;
-
   // MedeaPipeHandsモデル
   let detector
-  const model = handPoseDetection. SuppotedModels. MedeaPipeHands;
+  const model = handPoseDetection.SupportedModels.MediaPipeHands;
   const config = {
     runtime: "mediapipe",
     solutionPath: "https://cdn.jsdelivr.net/npm/@mediapipe/hands",
@@ -30,8 +30,8 @@
     width = window.innerWidth - 20;
     scale = width / 640;
     height = 360 * scale;
-    if (height > windiw.innerHeight - 150){
-      height =  windiw.innerHeight - 150
+    if (height > window.innerHeight - 150){
+      height =  window.innerHeight - 150;
       scale = height / 360;
       width = 640 * scale;
     }
@@ -83,74 +83,98 @@
   document.getElementById("start").didabled = false;
 }
 
-const createObject = (type,x,y,z,a,b,c,color,mass = 0) => {
-  // 表示用オブジェクトの作成
-  let geometry = new THREE.BoxGeometry(a,b,c);
-  if (type == "sphere") geometry = new THREE.SphereGeometry(a,24,24);
-  const material = new THREE.MeshPhongMaterial({color:color});
-  const mesh = new TRHEE.Mesh(geometry,material);
-  mesh.position.set(x,y,z);
-  [mesh.castShadow,mesh.receiveShadow] = [true, true];
-  scene.add(mesh);
-  // 物理用オブジェクトの作成
-  const body = new CANON.Body({mass:mass});
-  let shape = new CANON.Box(new CANON.vec3(a/2,b/2,c/2));
-  if(type == "sphere") shape = new CANNON.sphere(a);
-  body.addShape(shape);
-  body.position.copy(mesh.position);
-  body.quatenion.copy(mesh.quatenion);
-  world.addBody(body);
-  return {mesh:mesh, body:body};
-}
-
-const starGame = () => {
-  // カメラの接続
-  const media = navigator.mediaDevices.getUserMedia({
-    audio: false,video: {width: {ideal:640},height: {ideal:360}}
-  }).then(stream=> {
-    // ゲーム開始
-    video.srcObject = stream;
-    document.getElementById("start").disabled = true;
-  }).catch(error=> {
-    document.getElementById("message").innerText = error;
-  });
-}
-
-const update = async () => {
-  // 手の検出
-  context.clearRect(0,0,width,height);
-  const hands = await detector.estimateHands(video, {flipHorizontal: true});
-  if ((hands.length > 0)&&(hands[0].score > 0.8)){
-    const points = hands[0].keypoints;
-    const [p0,p1,p2] = [points[0],points[9],points[12]];
-    const [x,y] = [(p1.x+p0.x)/2*scale,(p1.y+p0.y)/2*scale]
-    if((status == "ready")&&(p2.y > p1.y)&&(num > 0)) shoot(x,y);
-    if((status == "end")&&(p2.y < p1.y)) status = "ready";
-    // 照準を描画
-    context.strokeStyle = "#00FF00";
-    context.beginPath();
-    context.arc(x,y,25,0,Math.PI*2);
-    context.stroke();
-    context.strokeRect(x-35,y,70,1);
-    context.strokeRect(x,y-35,1,70);
+  const createObject = (type,x,y,z,a,b,c,color,mass = 0) => {
+    // 表示用オブジェクトの作成
+    let geometry = new THREE.BoxGeometry(a,b,c);
+    if (type == "sphere") geometry = new THREE.SphereGeometry(a,24,24);
+    const material = new THREE.MeshPhongMaterial({color:color});
+    const mesh = new TRHEE.Mesh(geometry,material);
+    mesh.position.set(x,y,z);
+    [mesh.castShadow,mesh.receiveShadow] = [true, true];
+    scene.add(mesh);
+    // 物理用オブジェクトの作成
+    const body = new CANON.Body({mass:mass});
+    let shape = new CANON.Box(new CANON.vec3(a/2,b/2,c/2));
+    if(type == "sphere") shape = new CANNON.sphere(a);
+    body.addShape(shape);
+    body.position.copy(mesh.position);
+    body.quatenion.copy(mesh.quatenion);
+    world.addBody(body);
+    return {mesh:mesh, body:body};
   }
-  // 更新、描画
-  world.step(1/60);
-  for (const object of objects) {
-    object.mesh.position.copy(object.body.position);
-    object.mesh.quaternion.copy(object.body.quaternion);
-  }
-  renderer.render(scene,camera);
-  document.getElementById("num").innerText = "num";
-  window.requestAnimationFrame(update);
-}
 
-const shoot = (x,y) => {
-  // 弾を発射
-}
+  const starGame = () => {
+    // カメラの接続
+    const media = navigator.mediaDevices.getUserMedia({
+      audio: false,video: {width: {ideal:640},height: {ideal:360}}
+    }).then(stream=> {
+      // ゲーム開始
+      video.srcObject = stream;
+      document.getElementById("start").disabled = true;
+    }).catch(error=> {
+      document.getElementById("message").innerText = error;
+    });
+  }
+
+  const update = async () => {
+    // 手の検出
+    context.clearRect(0,0,width,height);
+    const hands = await detector.estimateHands(video, {flipHorizontal: true});
+    if ((hands.length > 0)&&(hands[0].score > 0.8)){
+      const points = hands[0].keypoints;
+      const [p0,p1,p2] = [points[0],points[9],points[12]];
+      const [x,y] = [(p1.x+p0.x)/2*scale,(p1.y+p0.y)/2*scale]
+      if((status == "ready")&&(p2.y > p1.y)&&(num > 0)) shoot(x,y);
+      if((status == "end")&&(p2.y < p1.y)) status = "ready";
+      // 照準を描画
+      context.strokeStyle = "#00FF00";
+      context.beginPath();
+      context.arc(x,y,25,0,Math.PI*2);
+      context.stroke();
+      context.strokeRect(x-35,y,70,1);
+      context.strokeRect(x,y-35,1,70);
+    }
+    // 更新、描画
+    world.step(1/60);
+    for (const object of objects) {
+      object.mesh.position.copy(object.body.position);
+      object.mesh.quaternion.copy(object.body.quaternion);
+    }
+    renderer.render(scene,camera);
+    document.getElementById("num").innerText = "num";
+    window.requestAnimationFrame(update);
+  }
+
+  const shoot = (x,y) => {
+    // 弾を発射
+    const target = new THREE.vector2();
+    [target.x,target.y] = [x/width*2-1,y/height*(-2)+1];
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(target,camera);
+    const dir = raycaster.ray.direction;
+    const bullet = createObject("sphere", 0,20,50,0.5,0,0,"#3333C",0.1);
+    bullet.body.allowSleep = true;
+    bullet.body.velocity.set(dir.x*80,dir.y*80,dir.z*80);
+    objects.push(bullet);
+    [num.status] = [num-1,"end"];
+  }
   </script>
+  <style>
+    #renderArea {possition: relative;}
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    video {display: none;}
+  </style>
 </head>
-<body>
-
+<body onload = "init()">
+<p>手のひら射的</p>
+<input type="button" id = "start" value = "スタート" disabled onclick = "starGame()">
+<span id = "message">loading...</span><hr>
+弾数 : <span id = "num">50</span>
+<div id="renderArea"></div>
+<video id = "video" width = "640" height = "360" autoplay></video>
 </body>
 </html>
