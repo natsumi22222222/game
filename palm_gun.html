@@ -72,7 +72,7 @@
   // 照準用キャンバス,ビデオ要素の取得、イベントの登録
   canvas = document.createElement("canvas");
   context = canvas.getContext("2d");
-  [canvas.width,canvas.height] = [widht, height];
+  [canvas.width,canvas.height] = [width, height];
   document.getElementById("renderArea").appendChild(canvas);
   video = document.getElementById("video");
   video = addEventListener("loadeddata",update);
@@ -80,7 +80,7 @@
   detector = await handPoseDetection.createDetector(model.config);
   const hands = await detector.estimateHands(canvas);
   document.getElementById("message").innerText += "ok";
-  document.getElementById("start").didabled = false;
+  document.getElementById("start").disabled = false;
 }
 
   const createObject = (type,x,y,z,a,b,c,color,mass = 0) => {
@@ -93,17 +93,17 @@
     [mesh.castShadow,mesh.receiveShadow] = [true, true];
     scene.add(mesh);
     // 物理用オブジェクトの作成
-    const body = new CANON.Body({mass:mass});
-    let shape = new CANON.Box(new CANON.vec3(a/2,b/2,c/2));
-    if(type == "sphere") shape = new CANNON.sphere(a);
+    const body = new CANNON.Body({mass:mass});
+    let shape = new CANNON.Box(new CANNON.Vec3(a/2,b/2,c/2));
+    if(type == "sphere") shape = new CANNON.Sphere(a);
     body.addShape(shape);
     body.position.copy(mesh.position);
-    body.quatenion.copy(mesh.quatenion);
+    body.quaternion.copy(mesh.quaternion);
     world.addBody(body);
     return {mesh:mesh, body:body};
   }
 
-  const starGame = () => {
+  const startGame = () => {
     // カメラの接続
     const media = navigator.mediaDevices.getUserMedia({
       audio: false,video: {width: {ideal:640},height: {ideal:360}}
